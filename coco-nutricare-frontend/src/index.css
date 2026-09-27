@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body { @apply bg-coco-bg text-slate-100 antialiased; }
+  :focus-visible { outline: 2px solid #22b889; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+}
+
+@layer components {
+  .card { @apply rounded-xl border border-coco-line bg-coco-panel p-5; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-orange { @apply btn bg-coco-orange text-white hover:bg-orange-500; }
+  .btn-green { @apply btn bg-coco-green text-white hover:bg-emerald-700; }
+  .btn-ghost { @apply btn border border-coco-line text-slate-200 hover:bg-white/5; }
+  .btn-sm { @apply px-3 py-1.5 text-xs; }
+  .input { @apply w-full rounded-lg border border-coco-line bg-coco-bg/60 px-3 py-2.5 text-sm text-white placeholder:text-coco-muted/60 focus:border-coco-accent focus:outline-none; }
+  .label { @apply mb-1.5 block text-sm text-coco-muted; }
+  .chip { @apply rounded-full border border-coco-line px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-white/5; }
+  .chip-on { @apply border-coco-green bg-coco-green text-white hover:bg-coco-green; }
+  .row { @apply flex items-center justify-between py-1.5 text-sm; }
+}

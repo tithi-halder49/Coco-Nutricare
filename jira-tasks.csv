@@ -1,0 +1,59 @@
+Issue ID,Parent,Issue Type,Summary,Description,Priority,Story Points,Labels
+1,,Epic,Project setup & tooling,"Repo, folder structure, backend/frontend scaffolding, env config, coding standards.",High,,
+2,,Epic,Authentication & role-based access,"Register/login for Parent, Pregnant Mother, Doctor; JWT; role-protected routes.",High,,
+3,,Epic,Parent dashboard & child profiles,"Parent dashboard stats, child list, add/edit/delete child profile.",High,,
+4,,Epic,Growth tracking,"Measurements, WHO weight-for-age percentile, trend and alerts, chart.",High,,
+5,,Epic,Nutrition plan & allergy safety,"Age-based targets, meal suggestions, allergy filtering, doctor clinical validation.",High,,
+6,,Epic,Pregnant mother module,"Pregnancy profile, week/trimester, symptom tracking with danger signs, pregnancy nutrition plan.",High,,
+7,,Epic,Reminders,"Vaccination/medicine reminders with filter, complete and snooze.",High,,
+8,,Epic,Doctor module & consultations,"Consultation booking, doctor dashboard, patient review, plan approval, chat.",High,,
+9,,Epic,"Testing, QA & documentation","API tests, manual test cases, SRS/report, setup guide, demo.",High,,
+10,,Epic,Deployment,"Production database, hosting, environment secrets.",High,,
+11,1,Story,Create Git repository with backend/ and frontend/ folders,"Add README, .gitignore, branch rules (main/dev).",High,1,backend frontend
+12,1,Story,"Scaffold FastAPI backend (app, routers, models, schemas)","SQLAlchemy + SQLite, config from env vars, Swagger at /docs.",High,3,backend
+13,1,Story,"Scaffold React app with Vite, Tailwind, lucide-react, React Router",Colour tokens from the UI mockup in tailwind.config.js.,High,3,frontend
+14,1,Story,Configure CORS for http://localhost:5173,Frontend can call the API from the browser.,High,1,backend
+15,1,Story,Create API service layer src/services/api.js,"Central fetch wrapper: base URL, token header, error handling.",High,3,frontend
+16,1,Story,Add seed script with demo users and data,parent/mother/doctor demo logins for presentations.,Medium,2,backend
+17,2,Story,"Build User model with roles (parent, pregnant_mother, doctor)","Unique email, bcrypt password hash.",Highest,2,backend
+18,2,Story,POST /api/auth/register,"Validate email, password 6-72 chars; return JWT + user.",Highest,2,backend
+19,2,Story,POST /api/auth/login with role check,Reject if account role doesn't match the chosen login page.,Highest,2,backend
+20,2,Story,JWT dependency and role guard (require_roles),"401 on bad token, 403 on wrong role.",Highest,3,backend
+21,2,Story,Landing page with 3 role cards,Parent / Pregnant Mother / Doctor buttons go to /login/<role>.,High,2,frontend
+22,2,Story,Role login page (/login/:role),"'Welcome back, <Role>!' form; on success redirect to that role's dashboard.",Highest,3,frontend
+23,2,Story,Create Account page with role pills,Doctor role shows specialization field.,High,3,frontend
+24,2,Story,AuthContext + ProtectedRoute,"Persist session, logout on 401, block other roles' pages.",Highest,3,frontend
+25,3,Story,GET /api/dashboard (parent),"Greeting, children count, growth status, reminders, consultations.",High,3,backend
+26,3,Story,Children CRUD API,GET/POST/PATCH/DELETE /api/children; parent owns child.,High,3,backend
+27,3,Story,Parent dashboard UI,Stat cards + child cards + Add child button.,High,3,frontend
+28,3,Story,Add child / Edit profile modal,"Name, DOB, gender, height, weight, allergies, habits, conditions.",High,3,frontend
+29,3,Story,Child profile page with tabs (Profile / Growth / Nutrition),Delete child with confirmation.,Medium,3,frontend
+30,4,Story,Growth measurement API,POST/GET/DELETE measurements; keep child's latest weight in sync.,High,2,backend
+31,4,Story,WHO weight-for-age percentile (LMS method),Load official WHO CSV tables via env; built-in approximate table for demo.,High,5,backend
+32,4,Story,"Growth alerts (slowed gain, weight loss, <3rd / >97th percentile)",Show disclaimer: alert does not diagnose.,High,3,backend
+33,4,Story,Growth Tracking UI with chart and add-measurement form,"Current weight, WHO percentile, trend badge, alerts.",Medium,5,frontend
+34,5,Story,Nutrition calculator service,"Age-based targets (kcal, protein, iron, calcium); under-6-month rule.",Highest,5,backend
+35,5,Story,Allergy matching and food filtering,Synonyms (e.g. chingri -> shellfish); unmatched allergies flagged for manual review.,Highest,3,backend
+36,5,Story,POST /api/diet-plan (stateless calculator),"Returns targets, meals, removed foods, warnings, BMI.",High,2,backend
+37,5,Story,Save child nutrition plan (pending_review),POST/GET /api/children/{id}/nutrition-plan.,High,2,backend
+38,5,Story,Nutrition Plan page + Quick diet check modal,Allergy check and clinical validation status shown.,High,5,frontend
+39,6,Story,Pregnancy profile API (due date or LMP),Week and trimester computed.,High,2,backend
+40,6,Story,Symptom log API with danger-sign detection,Urgent flag + 'contact your doctor now' message.,Highest,3,backend
+41,6,Story,Pregnancy nutrition plan (trimester based),"Iron 27 mg, folate 600 mcg, food safety notes.",High,3,backend
+42,6,Story,"Mother dashboard UI (week, trimester, weight gained)",Profile form when no profile exists.,High,3,frontend
+43,6,Story,Symptoms page UI with urgent alert banner,History list with danger-sign badges.,High,3,frontend
+44,7,Story,"Reminders API (create, list by type, complete, snooze, delete)",Timezone-safe datetimes.,Medium,3,backend
+45,7,Story,Reminders UI with All / Vaccination / Medicine filter,"'Today, 8:00 PM', 'Due in 3 days', Overdue labels.",Medium,3,frontend
+46,8,Story,"Consultation API (request, list, update, cancel)",Patients can only cancel; doctors update status/notes/schedule.,High,3,backend
+47,8,Story,Doctor access rules,Doctor sees a child/mother only if a consultation links them.,Highest,2,backend
+48,8,Story,Plan review API (approve / request changes),Stores doctor note and review time.,High,2,backend
+49,8,Story,Consultation chat API with polling (after_id),Closed consultations can't receive messages.,Medium,3,backend
+50,8,Story,Doctor dashboard UI,"Request counts, status filter, accept / complete buttons.",High,3,frontend
+51,8,Story,Doctor consultation detail page,"Child growth + plan review, or mother symptoms + plan review; notes & schedule.",High,5,frontend
+52,8,Story,Patient Consultations page with chat,"Book consultation, open chat, cancel.",Medium,5,frontend
+53,9,Story,Automated API tests (pytest),"Auth, children, growth, nutrition, chat, permissions.",High,3,backend qa
+54,9,Story,Manual test cases for every screen,Per role: happy path + error cases.,Medium,3,qa
+55,9,Story,Update SRS / lab report with final architecture and screenshots,"Use-case, ER and sequence diagrams.",Medium,5,docs
+56,9,Story,Prepare demo script and seed data for presentation,Demo flow per role.,Low,1,docs
+57,10,Story,Switch to PostgreSQL and add Alembic migrations,,Medium,3,backend
+58,10,Story,Deploy backend and frontend,"Set SECRET_KEY, CORS_ORIGINS, VITE_API_URL in production.",Low,5,devops
