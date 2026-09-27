@@ -52,7 +52,7 @@ export default function ChatPanel({ consultation }) {
       setText("");
       setError("");
     } catch (err) {
-      setError(err.message);
+      setError(err.message); 
     }
   };
 
