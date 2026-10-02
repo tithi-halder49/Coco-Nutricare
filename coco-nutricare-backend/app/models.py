@@ -225,3 +225,16 @@ class ConsultationMessage(Base):
     @property
     def sender_name(self) -> str:
         return self.sender.full_name
+class ChildProfile(Base):
+    __tablename__ = "child_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    parent_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    date_of_birth: Mapped[Date] = mapped_column(Date, nullable=False)
+    gender: Mapped[str] = mapped_column(String, nullable=False)
+    birth_weight: Mapped[float] = mapped_column(Float, nullable=True)
+    birth_height: Mapped[float] = mapped_column(Float, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+
+    parent: Mapped["User"] = relationship(back_populates="children")
