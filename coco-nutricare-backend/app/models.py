@@ -45,6 +45,7 @@ class PlanStatus(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     full_name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
@@ -54,29 +55,30 @@ class User(Base):
     specialization: Mapped[str | None] = mapped_column(String(120))  # doctors only
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
-    children: Mapped[list["Child"]] = relationship(back_populates="parent", cascade="all, delete-orphan")
+    children: Mapped[list["ChildProfile"]] = relationship(back_populates="parent", cascade="all, delete-orphan")
     pregnancy: Mapped["PregnancyProfile | None"] = relationship(
         back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
     reminders: Mapped[list["Reminder"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
-class Child(Base):
-    __tablename__ = "children"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    parent_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    name: Mapped[str] = mapped_column(String(120))
-    date_of_birth: Mapped[date] = mapped_column(Date)
-    gender: Mapped[Gender] = mapped_column(Enum(Gender))
-    height_cm: Mapped[float | None] = mapped_column(Float)
-    weight_kg: Mapped[float | None] = mapped_column(Float)
+class ChildProfile(Base):
+    __tablename__ = "child_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    parent_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    date_of_birth: Mapped[date] = mapped_column(Date, nullable=False)
+    gender: Mapped[str] = mapped_column(String(20), nullable=False)
+    birth_weight: Mapped[float | None] = mapped_column(Float, nullable=True)
+    birth_height: Mapped[float | None] = mapped_column(Float, nullable=True)
     food_allergies: Mapped[list] = mapped_column(JSON, default=list)
     medicine_allergies: Mapped[list] = mapped_column(JSON, default=list)
     dietary_habits: Mapped[str | None] = mapped_column(String(255))
     medical_conditions: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
-    parent: Mapped[User] = relationship(back_populates="children")
+    parent: Mapped["User"] = relationship(back_populates="children")
     measurements: Mapped[list["GrowthMeasurement"]] = relationship(
         back_populates="child", cascade="all, delete-orphan", order_by="GrowthMeasurement.measured_on"
     )
@@ -91,17 +93,19 @@ class Child(Base):
 
 class GrowthMeasurement(Base):
     __tablename__ = "growth_measurements"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    child_id: Mapped[int] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), index=True)
+    child_id: Mapped[int] = mapped_column(ForeignKey("child_profiles.id", ondelete="CASCADE"), index=True)
     measured_on: Mapped[date] = mapped_column(Date)
     weight_kg: Mapped[float] = mapped_column(Float)
     height_cm: Mapped[float | None] = mapped_column(Float)
 
-    child: Mapped[Child] = relationship(back_populates="measurements")
+    child: Mapped[ChildProfile] = relationship(back_populates="measurements")
 
 
 class PregnancyProfile(Base):
     __tablename__ = "pregnancy_profiles"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     due_date: Mapped[date] = mapped_column(Date)
@@ -133,8 +137,9 @@ class PregnancyProfile(Base):
 
 class NutritionPlan(Base):
     __tablename__ = "nutrition_plans"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    child_id: Mapped[int | None] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"), index=True)
+    child_id: Mapped[int | None] = mapped_column(ForeignKey("child_profiles.id", ondelete="CASCADE"), index=True)
     pregnancy_id: Mapped[int | None] = mapped_column(
         ForeignKey("pregnancy_profiles.id", ondelete="CASCADE"), index=True
     )
@@ -148,15 +153,16 @@ class NutritionPlan(Base):
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
-    child: Mapped[Child | None] = relationship(back_populates="nutrition_plans")
+    child: Mapped[ChildProfile | None] = relationship(back_populates="nutrition_plans")
     pregnancy: Mapped[PregnancyProfile | None] = relationship(back_populates="nutrition_plans")
 
 
 class Reminder(Base):
     __tablename__ = "reminders"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    child_id: Mapped[int | None] = mapped_column(ForeignKey("children.id", ondelete="CASCADE"))
+    child_id: Mapped[int | None] = mapped_column(ForeignKey("child_profiles.id", ondelete="CASCADE"))
     title: Mapped[str] = mapped_column(String(160))
     type: Mapped[ReminderType] = mapped_column(Enum(ReminderType))
     due_at: Mapped[datetime] = mapped_column(DateTime)
@@ -168,10 +174,11 @@ class Reminder(Base):
 
 class Consultation(Base):
     __tablename__ = "consultations"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     doctor_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    child_id: Mapped[int | None] = mapped_column(ForeignKey("children.id", ondelete="SET NULL"))
+    child_id: Mapped[int | None] = mapped_column(ForeignKey("child_profiles.id", ondelete="SET NULL"))
     reason: Mapped[str] = mapped_column(Text)
     preferred_time: Mapped[datetime | None] = mapped_column(DateTime)
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime)
@@ -183,7 +190,7 @@ class Consultation(Base):
 
     patient: Mapped[User] = relationship(foreign_keys=[patient_id])
     doctor: Mapped[User] = relationship(foreign_keys=[doctor_id])
-    child: Mapped[Child | None] = relationship()
+    child: Mapped[ChildProfile | None] = relationship()
 
     @property
     def patient_name(self) -> str:
@@ -201,6 +208,7 @@ class Consultation(Base):
 class SymptomLog(Base):
     """Pregnant mother's daily symptom entry."""
     __tablename__ = "symptom_logs"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     logged_on: Mapped[date] = mapped_column(Date, default=date.today)
@@ -214,6 +222,7 @@ class SymptomLog(Base):
 class ConsultationMessage(Base):
     """Chat message inside a consultation (patient <-> doctor)."""
     __tablename__ = "consultation_messages"
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     consultation_id: Mapped[int] = mapped_column(ForeignKey("consultations.id", ondelete="CASCADE"), index=True)
     sender_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -225,16 +234,3 @@ class ConsultationMessage(Base):
     @property
     def sender_name(self) -> str:
         return self.sender.full_name
-class ChildProfile(Base):
-    __tablename__ = "child_profiles"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    parent_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    name: Mapped[str] = mapped_column(String, nullable=False)
-    date_of_birth: Mapped[Date] = mapped_column(Date, nullable=False)
-    gender: Mapped[str] = mapped_column(String, nullable=False)
-    birth_weight: Mapped[float] = mapped_column(Float, nullable=True)
-    birth_height: Mapped[float] = mapped_column(Float, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
-
-    parent: Mapped["User"] = relationship(back_populates="children")

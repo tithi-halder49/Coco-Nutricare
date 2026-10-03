@@ -3,11 +3,10 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .models import Child, Consultation, Role, User
+from .models import ChildProfile, Consultation, Role, User
 
-
-def get_child_for_user(db: Session, child_id: int, user: User, write: bool = False) -> Child:
-    child = db.get(Child, child_id)
+def get_child_for_user(db: Session, child_id: int, user: User, write: bool = False) -> ChildProfile:
+    child = db.get(ChildProfile, child_id)
     if not child:
         raise HTTPException(404, "Child not found")
     if user.role == Role.parent and child.parent_id == user.id:

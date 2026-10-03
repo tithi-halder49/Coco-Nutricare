@@ -1,143 +1,225 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional, List
 from datetime import date, datetime
-from typing import Optional
-
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
-
-from .models import ConsultationStatus, Gender, PlanStatus, ReminderStatus, ReminderType, Role
 
 
-def _to_local_naive(v: Optional[datetime]) -> Optional[datetime]:
-    if v is not None and v.tzinfo is not None:
-        return v.astimezone().replace(tzinfo=None)
-    return v
+# ==========================================
+# 1. Auth Schemas
+# ==========================================
 
-
-class ORM(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-
-# ---------- Auth ----------
 class RegisterIn(BaseModel):
-    role: Role
-    full_name: str = Field(min_length=2, max_length=120)
     email: EmailStr
-    phone: Optional[str] = Field(default=None, max_length=20)
-    password: str = Field(min_length=6, max_length=72)
-    specialization: Optional[str] = Field(default=None, max_length=120)
+    password: str
+    full_name: Optional[str] = None
 
 
 class LoginIn(BaseModel):
     email: EmailStr
     password: str
-    role: Optional[Role] = None  # login screen per role; if given, must match
-
-
-class UserOut(ORM):
-    id: int
-    full_name: str
-    email: str
-    phone: Optional[str]
-    role: Role
-    specialization: Optional[str]
 
 
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: UserOut
 
 
-# ---------- Children ----------
-class ChildBase(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
-    date_of_birth: date
-    gender: Gender
-    height_cm: Optional[float] = Field(default=None, gt=0, lt=250)
-    weight_kg: Optional[float] = Field(default=None, gt=0, lt=200)
-    food_allergies: list[str] = []
-    medicine_allergies: list[str] = []
-    dietary_habits: Optional[str] = None
-    medical_conditions: Optional[str] = None
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+    full_name: Optional[str] = None
+    created_at: Optional[datetime] = None
 
-    @field_validator("date_of_birth")
-    @classmethod
-    def dob_not_future(cls, v: date) -> date:
-        if v > date.today():
-            raise ValueError("date_of_birth cannot be in the future")
-        return v
+    class Config:
+        from_attributes = True
 
 
-class ChildCreate(ChildBase):
+# ==========================================
+# 2. Child Profile Schemas
+# ==========================================
+
+class ChildProfileBase(BaseModel):
+    name: str
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    blood_group: Optional[str] = None
+    allergies: Optional[str] = None
+
+
+class ChildProfileCreate(ChildProfileBase):
     pass
 
 
-class ChildUpdate(BaseModel):
+class ChildProfileUpdate(BaseModel):
     name: Optional[str] = None
+    gender: Optional[str] = None
     date_of_birth: Optional[date] = None
-    gender: Optional[Gender] = None
-    height_cm: Optional[float] = Field(default=None, gt=0, lt=250)
-    weight_kg: Optional[float] = Field(default=None, gt=0, lt=200)
-    food_allergies: Optional[list[str]] = None
-    medicine_allergies: Optional[list[str]] = None
-    dietary_habits: Optional[str] = None
-    medical_conditions: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    blood_group: Optional[str] = None
+    allergies: Optional[str] = None
 
 
-class ChildOut(ChildBase, ORM):
+class ChildProfileResponse(ChildProfileBase):
     id: int
-    age: str
+    parent_id: int
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 
-# ---------- Growth ----------
+# ==========================================
+# 3. Growth Tracking Schemas
+# ==========================================
+
 class MeasurementIn(BaseModel):
-    measured_on: date = Field(default_factory=date.today)
-    weight_kg: float = Field(gt=0, lt=200)
-    height_cm: Optional[float] = Field(default=None, gt=0, lt=250)
+    measured_on: date
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    head_circumference_cm: Optional[float] = None
 
 
-class MeasurementOut(ORM):
+class MeasurementOut(BaseModel):
     id: int
+    child_id: int
     measured_on: date
-    weight_kg: float
-    height_cm: Optional[float]
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    head_circumference_cm: Optional[float] = None
 
-
-class GrowthPoint(BaseModel):
-    measured_on: date
-    weight_kg: float
-    height_cm: Optional[float]
-    age_months: float
-    z_score: Optional[float]
-    percentile: Optional[float]
+    class Config:
+        from_attributes = True
 
 
 class GrowthSummary(BaseModel):
+    latest_height: Optional[float] = None
+    latest_weight: Optional[float] = None
+    height_percentile: Optional[float] = None
+    weight_percentile: Optional[float] = None
+    status_notes: Optional[str] = None
+
+
+# ==========================================
+# 4. Diet Plan Schemas
+# ==========================================
+
+class DietPlanIn(BaseModel):
     child_id: int
-    child_name: str
-    current_weight_kg: Optional[float]
-    current_height_cm: Optional[float]
-    who_percentile: Optional[float]
-    trend: str  # no_data | normal | needs_review
-    alerts: list[str]
-    history: list[GrowthPoint]
-    reference_note: str
-    disclaimer: str
+    title: str
+    description: Optional[str] = None
+    calories: Optional[float] = None
+    meal_type: Optional[str] = None
 
 
-# ---------- Nutrition ----------
-class NutritionPlanOut(ORM):
+class DietPlanOut(BaseModel):
     id: int
-    child_id: Optional[int]
-    pregnancy_id: Optional[int]
+    child_id: int
+    title: str
+    description: Optional[str] = None
+    calories: Optional[float] = None
+    meal_type: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==========================================
+# 5. Consultations & Messages Schemas
+# ==========================================
+
+class DoctorOut(BaseModel):
+    id: int
+    name: str
+    specialty: Optional[str] = None
+    experience_years: Optional[int] = None
+    contact_number: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ConsultationIn(BaseModel):
+    doctor_id: int
+    topic: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class ConsultationUpdate(BaseModel):
+    status: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class ConsultationOut(BaseModel):
+    id: int
+    user_id: int
+    doctor_id: int
+    status: Optional[str] = None
+    topic: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class MessageIn(BaseModel):
+    consultation_id: int
+    sender_type: str
+    message: str
+
+
+class MessageOut(BaseModel):
+    id: int
+    consultation_id: int
+    sender_type: str
+    message: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==========================================
+# 6. Nutrition Schemas
+# ==========================================
+
+class NutritionTipOut(BaseModel):
+    id: int
+    title: str
+    category: Optional[str] = None
+    content: str
+
+    class Config:
+        from_attributes = True
+
+
+class NutritionPlanOut(BaseModel):
+    id: int
+
+    # Plan owner
+    child_id: Optional[int] = None
+    pregnancy_id: Optional[int] = None
+
+    # Generated nutrition information
     targets: dict
     meals: dict
-    removed_foods: list[str]
-    notes: list[str]
-    status: PlanStatus
-    review_note: Optional[str]
-    reviewed_by: Optional[int]
-    reviewed_at: Optional[datetime]
-    created_at: datetime
+    removed_foods: list
+    notes: list
+
+    # Clinical review information
+    status: str
+
+    reviewed_by: Optional[int] = None
+    review_note: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 
 class PlanReviewIn(BaseModel):
@@ -145,171 +227,86 @@ class PlanReviewIn(BaseModel):
     note: Optional[str] = None
 
 
-# ---------- Pregnancy ----------
-class PregnancyIn(BaseModel):
-    due_date: Optional[date] = None
-    lmp_date: Optional[date] = None  # last menstrual period; due date = LMP + 280 days
-    pre_pregnancy_weight_kg: Optional[float] = Field(default=None, gt=0, lt=300)
-    current_weight_kg: Optional[float] = Field(default=None, gt=0, lt=300)
-    height_cm: Optional[float] = Field(default=None, gt=0, lt=250)
-    food_allergies: list[str] = []
-    dietary_habits: Optional[str] = None
-    medical_conditions: Optional[str] = None
+# ==========================================
+# 7. Pregnancy & Symptom Schemas
+# ==========================================
 
-    @model_validator(mode="after")
-    def need_a_date(self):
-        if not self.due_date and not self.lmp_date:
-            raise ValueError("Provide due_date or lmp_date")
-        return self
-
-
-class PregnancyOut(ORM):
-    id: int
+class PregnancyTrackerIn(BaseModel):
     due_date: date
-    lmp_date: date
-    week: int
-    trimester: int
-    pre_pregnancy_weight_kg: Optional[float]
-    current_weight_kg: Optional[float]
-    height_cm: Optional[float]
-    food_allergies: list[str]
-    dietary_habits: Optional[str]
-    medical_conditions: Optional[str]
-
-
-# ---------- Reminders ----------
-class ReminderIn(BaseModel):
-    title: str = Field(min_length=1, max_length=160)
-    type: ReminderType
-    due_at: datetime
-    child_id: Optional[int] = None
     notes: Optional[str] = None
 
-    @field_validator("due_at")
-    @classmethod
-    def _local_time(cls, v):
-        return _to_local_naive(v)
+
+class PregnancyTrackerOut(BaseModel):
+    id: int
+    user_id: int
+    due_date: date
+    week_number: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+class PregnancyIn(BaseModel):
+    due_date: date
+    notes: Optional[str] = None
+
+
+class PregnancyOut(BaseModel):
+    id: int
+    user_id: int
+    due_date: date
+    week_number: Optional[int] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SymptomIn(BaseModel):
+    symptom_name: str
+    severity: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class SymptomOut(BaseModel):
+    id: int
+    user_id: int
+    symptom_name: str
+    severity: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==========================================
+# 8. Reminders Schemas
+# ==========================================
+
+class ReminderIn(BaseModel):
+    title: str
+    remind_at: datetime
+    notes: Optional[str] = None
+
+
+class ReminderOut(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    remind_at: datetime
+    is_completed: bool = False
+
+    class Config:
+        from_attributes = True
 
 
 class ReminderUpdate(BaseModel):
     title: Optional[str] = None
-    type: Optional[ReminderType] = None
-    due_at: Optional[datetime] = None
+    remind_at: Optional[datetime] = None
     notes: Optional[str] = None
-
-    @field_validator("due_at")
-    @classmethod
-    def _local_time(cls, v):
-        return _to_local_naive(v)
+    is_completed: Optional[bool] = None
 
 
 class SnoozeIn(BaseModel):
-    minutes: int = Field(default=60, ge=5, le=10080)
-
-
-class ReminderOut(ORM):
-    id: int
-    title: str
-    type: ReminderType
-    due_at: datetime
-    status: ReminderStatus
-    child_id: Optional[int]
-    notes: Optional[str]
-
-
-# ---------- Consultations ----------
-class ConsultationIn(BaseModel):
-    doctor_id: int
-    reason: str = Field(min_length=3)
-    child_id: Optional[int] = None
-    preferred_time: Optional[datetime] = None
-
-    @field_validator("preferred_time")
-    @classmethod
-    def _local_time(cls, v):
-        return _to_local_naive(v)
-
-
-class ConsultationUpdate(BaseModel):
-    status: Optional[ConsultationStatus] = None
-    scheduled_at: Optional[datetime] = None
-    doctor_notes: Optional[str] = None
-
-    @field_validator("scheduled_at")
-    @classmethod
-    def _local_time(cls, v):
-        return _to_local_naive(v)
-
-
-class ConsultationOut(ORM):
-    id: int
-    patient_id: int
-    patient_name: str
-    doctor_id: int
-    doctor_name: str
-    child_id: Optional[int]
-    child_name: Optional[str]
-    reason: str
-    preferred_time: Optional[datetime]
-    scheduled_at: Optional[datetime]
-    status: ConsultationStatus
-    doctor_notes: Optional[str]
-    created_at: datetime
-
-
-class DoctorOut(ORM):
-    id: int
-    full_name: str
-    specialization: Optional[str]
-
-
-# ---------- Stateless diet plan calculator ----------
-class DietPlanIn(BaseModel):
-    """Child metrics sent from the 'AI Diet Plan' modal. Nothing is saved."""
-    name: Optional[str] = None
-    age_months: int = Field(ge=0, le=216)
-    gender: Gender = Gender.female
-    weight_kg: Optional[float] = Field(default=None, gt=0, lt=200)
-    height_cm: Optional[float] = Field(default=None, gt=0, lt=250)
-    allergies: list[str] = []
-    dietary_habits: Optional[str] = None
-    medical_conditions: Optional[str] = None
-
-
-class DietPlanOut(BaseModel):
-    targets: dict
-    meals: dict
-    removed_foods: list[str]
-    warnings: list[str]
-    notes: list[str]
-    bmi: Optional[float] = None
-
-
-# ---------- Symptoms ----------
-class SymptomIn(BaseModel):
-    logged_on: date = Field(default_factory=date.today)
-    symptoms: list[str] = []
-    weight_kg: Optional[float] = Field(default=None, gt=0, lt=300)
-    notes: Optional[str] = None
-
-
-class SymptomOut(ORM):
-    id: int
-    logged_on: date
-    symptoms: list[str]
-    weight_kg: Optional[float]
-    notes: Optional[str]
-    urgent: bool
-
-
-# ---------- Chat ----------
-class MessageIn(BaseModel):
-    text: str = Field(min_length=1, max_length=2000)
-
-
-class MessageOut(ORM):
-    id: int
-    sender_id: int
-    sender_name: str
-    text: str
-    created_at: datetime
+    snooze_minutes: Optional[int] = 5
