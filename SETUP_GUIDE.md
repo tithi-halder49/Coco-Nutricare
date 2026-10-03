@@ -60,4 +60,4 @@ Terminal 2: `cd coco-nutricare-frontend` → `npm run dev`
 
 ## Jira te task import
 Jira project → **⋯ / Settings → System → External System Import → CSV** (ba Filters menu te "Import issues from CSV") → `jira-tasks.csv` upload →
-column mapping: Issue ID → Issue ID, Parent → Parent, Issue Type, Summary, Description, Priority, Story Points, Labels.
+column mapping: Issue ID → Issue ID, Parent → Parent, Issue Type, Summary, Description, Priority, Story Points, Labels .
