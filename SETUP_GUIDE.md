@@ -44,7 +44,7 @@ npm run dev
 |---|---|---|
 | Parent | parent@coco.app | password123 |
 | Pregnant Mother | mother@coco.app | password123 |
-| Doctor | doctor@coco.app | password123 |
+| Doctor | doctor@coco.app | password123  |
 
 Home page e Parent card e click → login → Parent dashboard. Log out kore Doctor diye login → Doctor dashboard. Mother er jonno same.
 
