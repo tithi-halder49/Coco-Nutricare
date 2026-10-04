@@ -15,7 +15,7 @@ function WeightChart({ history }) {
     P + (i * (W - 2 * P)) / (history.length - 1),
     H - P - ((h.weight_kg - min) / (max - min)) * (H - 2 * P),
   ]);
-  //Growthpanel
+  //Growthpanel 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Weight over time">
       <polyline points={pts.map((p) => p.join(",")).join(" ")} fill="none" stroke="#22b889" strokeWidth="2.5" />

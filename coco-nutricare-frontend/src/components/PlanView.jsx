@@ -12,9 +12,10 @@ const SLOT_ORDER = ["breakfast", "lunch", "snack", "dinner"];
 
 /**
  * Renders a nutrition plan. Works for saved plans (with status) and for the
- * stateless /api/diet-plan result (with warnings + bmi).
+ *  /api/diet-plan result (with warnings + bmi).
  */
 export default function PlanView({ plan }) {
+  
   const warnings = plan.warnings ?? [];
   const slots = SLOT_ORDER.filter((s) => plan.meals?.[s]);
 
